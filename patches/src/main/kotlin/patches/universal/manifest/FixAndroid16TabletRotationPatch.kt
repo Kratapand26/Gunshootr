@@ -67,28 +67,22 @@ val fixAndroid16TabletRotationPatch = resourcePatch(
                 application.setAttributeNS(NS_ANDROID, "android:resizeableActivity", "true")
             }
 
-            // 3. Add Android 14+ / 16 WindowManager compat properties
-            val propNames = listOf(
-                "android.window.PROPERTY_COMPAT_ALLOW_IGNORING_ORIENTATION_CONSTRAINTS" to "true",
-                "android.window.PROPERTY_COMPAT_ALLOW_MIN_ASPECT_RATIO_OVERRIDE" to "false",
-            )
-            for ((propName, propVal) in propNames) {
-                var exists = false
-                val existingProps = application.getElementsByTagName("property")
-                for (i in 0 until existingProps.length) {
-                    val p = existingProps.item(i) as? Element ?: continue
-                    if (p.getAttributeNS(NS_ANDROID, "name") == propName) {
-                        p.setAttributeNS(NS_ANDROID, "android:value", propVal)
-                        exists = true
-                        break
-                    }
-                }
-                if (!exists) {
-                    val propEl = manifest.createElement("property")
-                    propEl.setAttributeNS(NS_ANDROID, "android:name", propName)
-                    propEl.setAttributeNS(NS_ANDROID, "android:value", propVal)
-                    application.appendChild(propEl)
-                }
+            // 3. Ensure supports-screens allows large and xlarge screens on tablets
+            val supportsList = manifest.getElementsByTagName("supports-screens")
+            val supportsScreens = if (supportsList.length > 0) {
+                supportsList.item(0) as? Element
+            } else {
+                val created = manifest.createElement("supports-screens")
+                root.insertBefore(created, application)
+                created
+            }
+            if (supportsScreens != null) {
+                supportsScreens.setAttributeNS(NS_ANDROID, "android:smallScreens", "true")
+                supportsScreens.setAttributeNS(NS_ANDROID, "android:normalScreens", "true")
+                supportsScreens.setAttributeNS(NS_ANDROID, "android:largeScreens", "true")
+                supportsScreens.setAttributeNS(NS_ANDROID, "android:xlargeScreens", "true")
+                supportsScreens.setAttributeNS(NS_ANDROID, "android:requiresSmallestWidthDp", "0")
+                supportsScreens.setAttributeNS(NS_ANDROID, "android:anyDensity", "true")
             }
 
             // 4. Cap targetSdkVersion to 35 if it is >= 36
@@ -103,7 +97,7 @@ val fixAndroid16TabletRotationPatch = resourcePatch(
                 }
             }
 
-            // 5. Update activities with configChanges & resizability
+            // 5. Update activities and activity-aliases with configChanges & resizability
             val neededConfigs = setOf(
                 "orientation",
                 "screenSize",
@@ -112,10 +106,17 @@ val fixAndroid16TabletRotationPatch = resourcePatch(
                 "density",
                 "layoutDirection",
             )
+            val activityContainers = mutableListOf<Element>()
             val activities = manifest.getElementsByTagName("activity")
             for (i in 0 until activities.length) {
-                val act = activities.item(i) as? Element ?: continue
+                (activities.item(i) as? Element)?.let { activityContainers.add(it) }
+            }
+            val aliases = manifest.getElementsByTagName("activity-alias")
+            for (i in 0 until aliases.length) {
+                (aliases.item(i) as? Element)?.let { activityContainers.add(it) }
+            }
 
+            for (act in activityContainers) {
                 if (enableResizable == true) {
                     act.setAttributeNS(NS_ANDROID, "android:resizeableActivity", "true")
                 }

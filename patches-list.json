@@ -3,6 +3,14 @@
   "version": "1.0.0",
   "patches": [
     {
+      "name": "Clearing Split Metadata",
+      "description": "Removes split-install manifest attributes and Play Store split metadata from the app manifest to prevent install errors on extracted base APKs.",
+      "default": false,
+      "category": "Manifest",
+      "dependencies": [],
+      "options": []
+    },
+    {
       "name": "Fix Android 16 Tablet Rotation",
       "description": "Exempts the app from Android 16 tablet orientation restrictions so in-app rotate buttons work properly.",
       "default": false,
@@ -42,6 +50,22 @@
           "default": true
         }
       ]
+    },
+    {
+      "name": "Spoof Signature Match",
+      "description": "Makes PackageManager.checkSignatures always return SIGNATURE_MATCH so apps that verify their own or another package's signature accept any build",
+      "default": false,
+      "category": "Spoof",
+      "dependencies": [],
+      "options": []
+    },
+    {
+      "name": "Unlock Rotation",
+      "description": "Remove screenOrientation locks so the app rotates freely",
+      "default": false,
+      "category": "Manifest",
+      "dependencies": [],
+      "options": []
     }
   ]
 }

@@ -24,15 +24,35 @@ Add Gunshootr Patches directly inside Morphe Manager:
 
 #### **Fix Android 16 Tablet Rotation**
 - **Category:** Manifest
-- **Type:** Universal (works on any Android app)
+- **Type:** Universal
 - **What it does:**
   - On **Android 16 (API 36)** on large screens and tablets (`sw >= 600dp`), the OS WindowManager ignores in-app `Activity.setRequestedOrientation()` calls for standard applications.
-  - This patch sets `android:appCategory="game"` in `<application>`, triggering Android's game exemption policy which allows in-app screen rotation buttons to freely change screen orientation.
+  - Sets `android:appCategory="game"` in `<application>`, triggering Android's game exemption policy which allows in-app screen rotation buttons to freely change screen orientation.
+  - Ensures `<supports-screens>` declares support for large and xlarge screens on tablets and foldables.
   - Caps `targetSdkVersion` to 35 (Android 15) if the app targets API 36+, avoiding Android 16's strict tablet orientation lock.
-  - Injects `PROPERTY_COMPAT_ALLOW_IGNORING_ORIENTATION_CONSTRAINTS` and `PROPERTY_COMPAT_ALLOW_MIN_ASPECT_RATIO_OVERRIDE`.
-  - Ensures activities declare `configChanges` (`orientation|screenSize|smallestScreenSize...`) and `android:resizeableActivity="true"` to prevent activity restarts or letterboxing black bars upon rotation.
+  - Ensures activities and activity-aliases declare `configChanges` (`orientation|screenSize|smallestScreenSize...`) and `android:resizeableActivity="true"` to prevent activity restarts or letterboxing black bars upon rotation.
 
----
+#### **Clearing Split Metadata**
+- **Category:** Manifest
+- **Type:** Universal
+- **What it does:**
+  - Removes split-install manifest attributes (`isSplitRequired`, `requiredSplitTypes`, `splitTypes`) and Play Store split metadata (`com.android.vending.splits`).
+  - Prevents "corrupted package" / "There was a problem parsing the package" install errors when patching base APKs extracted from installed apps.
+
+#### **Unlock Rotation**
+- **Category:** Manifest
+- **Type:** Universal
+- **What it does:**
+  - Strips hardcoded `android:screenOrientation` locks from all `<activity>` and `<activity-alias>` tags, allowing apps to rotate freely with the device orientation.
+
+### 🛡️ Spoof & Integrity
+
+#### **Spoof Signature Match**
+- **Category:** Spoof
+- **Type:** Universal (Bytecode)
+- **What it does:**
+  - Intercepts `PackageManager.checkSignatures()` calls and forces them to return `SIGNATURE_MATCH` (`0x0`).
+  - Bypasses built-in app integrity and anti-tamper verification checks (such as those in Moon+ Reader Pro and other closed-source apps) that display "App corrupted" or "License invalid" when re-signed by Morphe.
 
 ## 🛠️ Building From Source
 
