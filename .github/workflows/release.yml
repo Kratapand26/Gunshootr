@@ -68,7 +68,7 @@ jobs:
           sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"${VERSION}\"/" patches-list.json
 
       - name: Build Patch MPP Bundle
-        run: ./gradlew build -Pversion=${{ steps.vars.outputs.version }} --stacktrace
+        run: ./gradlew build generatePatchesList -Pversion=${{ steps.vars.outputs.version }} --stacktrace
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
