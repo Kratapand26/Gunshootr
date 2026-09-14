@@ -39,12 +39,6 @@ Add Gunshootr Patches directly inside Morphe Manager:
   - Removes split-install manifest attributes (`isSplitRequired`, `requiredSplitTypes`, `splitTypes`) and Play Store split metadata (`com.android.vending.splits`).
   - Prevents "corrupted package" / "There was a problem parsing the package" install errors when patching base APKs extracted from installed apps.
 
-#### **Unlock Rotation**
-- **Category:** Manifest
-- **Type:** Universal
-- **What it does:**
-  - Strips hardcoded `android:screenOrientation` locks from all `<activity>` and `<activity-alias>` tags, allowing apps to rotate freely with the device orientation.
-
 ### 🛡️ Spoof & Integrity
 
 #### **Spoof Signature Match**

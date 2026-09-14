@@ -25,14 +25,6 @@
       "category": "Spoof",
       "dependencies": [],
       "options": []
-    },
-    {
-      "name": "Unlock Rotation",
-      "description": "Remove screenOrientation locks so the app rotates freely",
-      "default": false,
-      "category": "Manifest",
-      "dependencies": [],
-      "options": []
     }
   ]
 }
