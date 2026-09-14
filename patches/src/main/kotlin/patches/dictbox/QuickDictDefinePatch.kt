@@ -26,24 +26,37 @@ val quickDictDefinePatch = resourcePatch(
                 return@use
             }
 
-            val activities = manifest.getElementsByTagName("activity")
             val targetActivities = mutableListOf<Element>()
+            val candidates = mutableListOf<Element>()
 
-            // 1. Locate activity handling text selection (PROCESS_TEXT or SEND)
-            for (i in 0 until activities.length) {
-                val act = activities.item(i) as? Element ?: continue
-                val filters = act.getElementsByTagName("intent-filter")
+            // Gather all activity and activity-alias elements
+            for (tag in listOf("activity", "activity-alias")) {
+                val nodes = manifest.getElementsByTagName(tag)
+                for (i in 0 until nodes.length) {
+                    (nodes.item(i) as? Element)?.let { candidates.add(it) }
+                }
+            }
+
+            // 1. Locate components handling text selection (PROCESS_TEXT or SEND)
+            for (cand in candidates) {
+                val filters = cand.getElementsByTagName("intent-filter")
                 for (j in 0 until filters.length) {
                     val filter = filters.item(j) as? Element ?: continue
                     val actions = filter.getElementsByTagName("action")
                     for (k in 0 until actions.length) {
                         val action = actions.item(k) as? Element ?: continue
-                        val name = action.getAttributeNS(NS_ANDROID, "name")
+                        val name = getAttr(action, "name")
                         if (name == "android.intent.action.PROCESS_TEXT" ||
                             name == "android.intent.action.SEND"
                         ) {
-                            if (!targetActivities.contains(act)) {
-                                targetActivities.add(act)
+                            val resolvedTarget = if (cand.tagName == "activity-alias") {
+                                val targetName = getAttr(cand, "targetActivity")
+                                candidates.firstOrNull { it.tagName == "activity" && getAttr(it, "name") == targetName } ?: cand
+                            } else {
+                                cand
+                            }
+                            if (!targetActivities.contains(resolvedTarget)) {
+                                targetActivities.add(resolvedTarget)
                             }
                         }
                     }
@@ -52,16 +65,21 @@ val quickDictDefinePatch = resourcePatch(
 
             // Fallback: If no dedicated text activity found, find the main launcher activity
             if (targetActivities.isEmpty()) {
-                for (i in 0 until activities.length) {
-                    val act = activities.item(i) as? Element ?: continue
-                    val filters = act.getElementsByTagName("intent-filter")
+                for (cand in candidates) {
+                    val filters = cand.getElementsByTagName("intent-filter")
                     for (j in 0 until filters.length) {
                         val filter = filters.item(j) as? Element ?: continue
                         val actions = filter.getElementsByTagName("action")
                         for (k in 0 until actions.length) {
                             val action = actions.item(k) as? Element ?: continue
-                            if (action.getAttributeNS(NS_ANDROID, "name") == "android.intent.action.MAIN") {
-                                targetActivities.add(act)
+                            if (getAttr(action, "name") == "android.intent.action.MAIN") {
+                                val resolvedTarget = if (cand.tagName == "activity-alias") {
+                                    val targetName = getAttr(cand, "targetActivity")
+                                    candidates.firstOrNull { it.tagName == "activity" && getAttr(it, "name") == targetName } ?: cand
+                                } else {
+                                    cand
+                                }
+                                targetActivities.add(resolvedTarget)
                                 break
                             }
                         }
@@ -76,7 +94,7 @@ val quickDictDefinePatch = resourcePatch(
 
             var patchedCount = 0
             for (targetActivity in targetActivities) {
-                val targetName = targetActivity.getAttributeNS(NS_ANDROID, "name")
+                val targetName = getAttr(targetActivity, "name")
                 targetActivity.setAttributeNS(NS_ANDROID, "android:exported", "true")
 
                 // Add TRANSLATE filter (labeled "Translate")
@@ -111,7 +129,7 @@ val quickDictDefinePatch = resourcePatch(
                 var aliasExists = false
                 for (a in 0 until existingAliases.length) {
                     val existing = existingAliases.item(a) as? Element ?: continue
-                    if (existing.getAttributeNS(NS_ANDROID, "name") == aliasName) {
+                    if (getAttr(existing, "name") == aliasName) {
                         aliasExists = true
                         break
                     }
@@ -143,15 +161,23 @@ val quickDictDefinePatch = resourcePatch(
     }
 }
 
+private fun getAttr(element: Element, name: String): String {
+    val nsVal = element.getAttributeNS(NS_ANDROID, name)
+    if (nsVal.isNotEmpty()) return nsVal
+    val androidVal = element.getAttribute("android:$name")
+    if (androidVal.isNotEmpty()) return androidVal
+    return element.getAttribute(name)
+}
+
 private fun hasActionAndLabel(element: Element, actionName: String, label: String): Boolean {
     val filters = element.getElementsByTagName("intent-filter")
     for (i in 0 until filters.length) {
         val filter = filters.item(i) as? Element ?: continue
-        if (filter.getAttributeNS(NS_ANDROID, "label") == label) {
+        if (getAttr(filter, "label") == label) {
             val actions = filter.getElementsByTagName("action")
             for (j in 0 until actions.length) {
                 val action = actions.item(j) as? Element ?: continue
-                if (action.getAttributeNS(NS_ANDROID, "name") == actionName) return true
+                if (getAttr(action, "name") == actionName) return true
             }
         }
     }
