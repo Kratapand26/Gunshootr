@@ -45,6 +45,9 @@ jobs:
 
       - name: Build Patch MPP Bundle
         run: ./gradlew build --stacktrace
+        env:
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload MPP Artifact
         uses: actions/upload-artifact@v4
