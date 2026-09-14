@@ -39,20 +39,47 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
 
+      - name: Determine Release Version
+        id: vars
+        run: |
+          TAG="${{ github.event.inputs.version }}"
+          VERSION="${TAG#v}"
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Sync Version in Metadata Files
+        run: |
+          VERSION="${{ steps.vars.outputs.version }}"
+          TAG="${{ steps.vars.outputs.tag }}"
+          NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          sed -i "s/^version=.*/version=${VERSION}/" gradle.properties
+
+          cat <<EOF > patches-bundle.json
+          {
+            "created_at": "${NOW}",
+            "description": "Gunshootr Patches ${TAG}",
+            "download_url": "https://github.com/Kratapand26/Gunshootr/releases/download/${TAG}/patches-${VERSION}.mpp",
+            "signature_download_url": "",
+            "version": "${VERSION}"
+          }
+          EOF
+
+          sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"${VERSION}\"/" patches-list.json
+
       - name: Build Patch MPP Bundle
-        run: ./gradlew build --stacktrace
+        run: ./gradlew build -Pversion=${{ steps.vars.outputs.version }} --stacktrace
         env:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Determine Release Tag
-        id: vars
+      - name: Commit & Push Version Bump to main
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "tag=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
-          else
-            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
-          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add gradle.properties patches-bundle.json patches-list.json
+          git commit -m "chore(release): Bump version to ${{ steps.vars.outputs.tag }} [skip ci]" || echo "No changes to commit"
+          git push origin main || echo "Push skipped"
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -60,10 +87,11 @@ jobs:
           tag_name: ${{ steps.vars.outputs.tag }}
           name: Gunshootr Patches ${{ steps.vars.outputs.tag }}
           files: |
-            patches/build/libs/patches-*.mpp
+            patches/build/libs/patches-${{ steps.vars.outputs.version }}.mpp
             patches-bundle.json
             patches-list.json
           draft: false
           prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
