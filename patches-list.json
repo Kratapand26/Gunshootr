@@ -12,44 +12,11 @@
     },
     {
       "name": "Fix Android 16 Tablet Rotation",
-      "description": "Exempts the app from Android 16 tablet orientation restrictions so in-app rotate buttons work properly.",
+      "description": "Exempts the app from Android 16 tablet orientation restrictions and configures activities so in-app rotate buttons work properly.",
       "default": false,
       "category": "Manifest",
       "dependencies": [],
-      "options": [
-        {
-          "key": "exemptAsGame",
-          "title": "Exempt as Game Category",
-          "description": "Sets android:appCategory=\"game\" in <application> to bypass Android 16 tablet orientation blocks.",
-          "required": false,
-          "type": "BOOLEAN",
-          "default": true
-        },
-        {
-          "key": "capTargetSdkTo35",
-          "title": "Cap Target SDK to 35 (Android 15)",
-          "description": "Caps targetSdkVersion to 35 so Android 16 does not enforce API 36+ large-screen orientation restrictions.",
-          "required": false,
-          "type": "BOOLEAN",
-          "default": true
-        },
-        {
-          "key": "addRotationConfigChanges",
-          "title": "Ensure Rotation Config Changes",
-          "description": "Adds orientation and screenSize to configChanges on all activities to prevent crashes or restarts during rotation.",
-          "required": false,
-          "type": "BOOLEAN",
-          "default": true
-        },
-        {
-          "key": "enableResizable",
-          "title": "Force Resizable Activity",
-          "description": "Sets android:resizeableActivity=\"true\" so rotated layouts fill tablet displays properly without letterboxing.",
-          "required": false,
-          "type": "BOOLEAN",
-          "default": true
-        }
-      ]
+      "options": []
     },
     {
       "name": "Spoof Signature Match",
