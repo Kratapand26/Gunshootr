@@ -10,7 +10,7 @@ import java.util.logging.Logger
 val quickDictDefinePatch = resourcePatch(
     name = "Quick Dict & Define Action",
     description = "Enables Dict Box to handle system Translate/Define actions and adds a direct 'Dict' selection action.",
-    default = false,
+    default = true,
 ) {
     category("Dict Box")
     compatibleWith("com.grandsons.dictsharp")

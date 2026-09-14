@@ -3,6 +3,33 @@
   "version": "1.0.4",
   "patches": [
     {
+      "name": "Bypass Anti-Tamper",
+      "description": "Bypasses the signature check library (libyrf.so) that crashes the app upon modification by Morphe.",
+      "default": true,
+      "category": "Dict Box",
+      "dependencies": [],
+      "compatiblePackages": [
+        {
+          "packageName": "com.grandsons.dictsharp",
+          "name": null,
+          "description": null,
+          "apkFileType": null,
+          "appIconColor": null,
+          "signatures": null,
+          "targets": [
+            {
+              "version": null,
+              "versionCodes": null,
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            }
+          ]
+        }
+      ],
+      "options": []
+    },
+    {
       "name": "Clearing Split Metadata",
       "description": "Removes split-install manifest attributes and Play Store split metadata from the app manifest to prevent install errors on extracted base APKs.",
       "default": false,
@@ -23,7 +50,7 @@
     {
       "name": "Quick Dict & Define Action",
       "description": "Enables Dict Box to handle system Translate/Define actions and adds a direct 'Dict' selection action.",
-      "default": false,
+      "default": true,
       "category": "Dict Box",
       "dependencies": [],
       "compatiblePackages": [
