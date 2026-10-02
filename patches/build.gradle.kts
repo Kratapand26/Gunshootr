@@ -15,8 +15,13 @@ patches {
 val patchListGeneratorClasspath: Configuration by configurations.creating
 
 dependencies {
+    compileOnly(libs.arsclib)
     compileOnly(libs.gson)
     patchListGeneratorClasspath(libs.gson)
+    testImplementation(libs.arsclib)
+    testImplementation(libs.junit)
+    testImplementation(libs.morphe.patcher)
+    testImplementation(libs.kotlinx.coroutines.core)
 }
 
 tasks {
@@ -24,6 +29,8 @@ tasks {
     // Without buildAndroid, the MPP only contains JVM .class files,
     // which the Morphe Android app cannot load (Android uses DEX format).
     build { dependsOn("buildAndroid") }
+
+    test { useJUnit() }
 
     register<JavaExec>("generatePatchesList") {
         description = "Build patch with patch list"

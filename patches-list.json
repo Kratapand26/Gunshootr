@@ -40,12 +40,22 @@
     },
     {
       "name": "Fix Android 16 Tablet Rotation",
-      "description": "Exempts the app from Android 16 tablet orientation restrictions and configures activities so in-app rotate buttons work properly.",
+      "description": "Restores in-app rotation on Android 16 tablets using the game exemption while preserving the app's activity configuration and screen support.",
       "default": false,
       "category": "Manifest",
       "dependencies": [],
       "compatiblePackages": null,
-      "options": []
+      "options": [
+        {
+          "key": "capTargetSdkTo35",
+          "title": "Cap target SDK to Android 15 (API 35)",
+          "description": "Optional fallback for apps that still block rotation. Moon+ Reader Pro 10.7's working patched APK retains API 36, so leave this disabled for that app. Lowering the target SDK can change other Android behavior.",
+          "required": false,
+          "type": "kotlin.Boolean",
+          "default": false,
+          "values": null
+        }
+      ]
     },
     {
       "name": "Quick Dict & Define Action",
