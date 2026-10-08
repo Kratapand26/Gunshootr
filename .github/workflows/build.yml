@@ -3,6 +3,10 @@ name: CI Build
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: read
+
 jobs:
   build:
     name: Build Patch Bundle
