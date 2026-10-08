@@ -1,3 +1,6 @@
+import com.android.build.api.variant.ApplicationAndroidComponentsExtension
+import com.android.build.api.variant.HostTestBuilder
+
 extension {
     name = "extensions/linkedin.mpe"
 }
@@ -8,11 +11,11 @@ android {
     compileSdk = 34
 }
 
-androidComponents {
+extensions.configure<ApplicationAndroidComponentsExtension> {
     // AGP 9.1 enables unit tests only for the tested build type by default.
     // Exercise the same release variant that supplies the bundled extension DEX.
     beforeVariants(selector().withBuildType("release")) {
-        it.enableUnitTest = true
+        it.hostTests.getValue(HostTestBuilder.UNIT_TEST_TYPE).enable = true
     }
 }
 
