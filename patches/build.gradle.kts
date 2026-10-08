@@ -3,7 +3,7 @@ group = "io.github.kratapand26"
 patches {
     about {
         name = "Gunshootr Patches"
-        description = "Universal Morphe patches for Android 16 tablet rotation fixes and device enhancements"
+        description = "Morphe patches for tablet compatibility, Dict Box enhancements, and LinkedIn features"
         source = "https://github.com/Kratapand26/Gunshootr"
         author = "Gunshootrr"
         contact = ""
@@ -30,7 +30,10 @@ tasks {
     // which the Morphe Android app cannot load (Android uses DEX format).
     build { dependsOn("buildAndroid") }
 
-    test { useJUnit() }
+    test {
+        useJUnit()
+        dependsOn(":extensions:linkedin:testReleaseUnitTest")
+    }
 
     register<JavaExec>("generatePatchesList") {
         description = "Build patch with patch list"
