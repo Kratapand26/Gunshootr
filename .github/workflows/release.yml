@@ -92,6 +92,19 @@ jobs:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Verify Patch MPP Bundle
+        run: python3 tools/verify_patch_bundle.py "patches/build/libs/patches-${{ steps.vars.outputs.version }}.mpp" --version "${{ steps.vars.outputs.version }}" --dexdump "$ANDROID_HOME/build-tools/34.0.0/dexdump"
+
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            patches/build/test-results/test/*.xml
+            extensions/linkedin/build/test-results/testReleaseUnitTest/*.xml
+          if-no-files-found: ignore
+
       - name: Commit & Push Version Bump to main
         id: commit
         run: |

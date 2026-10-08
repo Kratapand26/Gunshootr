@@ -40,9 +40,27 @@ jobs:
           GITHUB_ACTOR: ${{ github.actor }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Verify Patch MPP Bundle
+        id: bundle
+        run: |
+          VERSION=$(sed -n 's/^version=//p' gradle.properties)
+          BUNDLE="patches/build/libs/patches-${VERSION}.mpp"
+          python3 tools/verify_patch_bundle.py "$BUNDLE" --version "$VERSION" --dexdump "$ANDROID_HOME/build-tools/34.0.0/dexdump"
+          echo "path=$BUNDLE" >> "$GITHUB_OUTPUT"
+
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            patches/build/test-results/test/*.xml
+            extensions/linkedin/build/test-results/testReleaseUnitTest/*.xml
+          if-no-files-found: ignore
+
       - name: Upload MPP Artifact
         uses: actions/upload-artifact@v4
         with:
           name: patches-bundle
-          path: patches/build/libs/patches-*.mpp
+          path: ${{ steps.bundle.outputs.path }}
           if-no-files-found: error

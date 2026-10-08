@@ -35,10 +35,11 @@ are intentionally preserved alongside English labels; translating those internal
 match strings would change filter behavior. All visible interface text is English.
 
 Gunshootr names its settings screen and launcher shortcut and checks updates from
-`Kratapand26/Gunshootr`. Upstream version **1.0.0** remains visible in About; the
-Gunshootr bundle keeps its existing version. The original author is credited.
-Settings activity registration is private and idempotent and does not change
-the app's SDK declarations, existing activities, or permissions.
+`Kratapand26/Gunshootr`. Upstream version **1.0.0** remains visible in About, and
+the original author is credited. Gunshootr uses its own bundle version for source
+updates while retaining the upstream LinkedIn app version declarations. Settings
+activity registration is private and idempotent and does not change the app's SDK
+declarations, existing activities, or permissions.
 
 Background requests are limited to these services:
 
@@ -61,11 +62,17 @@ downgrades, redirect destination validation, oversized responses, executable lin
 clipboard link preservation, download folder traversal, malformed payloads,
 original language matching, and original compatibility metadata.
 
-The normal Gradle build remains unverified locally because the pinned Morphe
-Gradle plugin is unavailable without package-registry access. Local compilation,
-Android DEX generation, and JUnit tests used the previously verified official
-Morphe runtime and installed development tools instead. CI builds the patch
-module and runs extension tests without building a separate extension app.
+The full Gradle build and release tests passed on GitHub Actions. Release-variant
+unit tests are explicitly enabled through the typed AGP 9.1 variant API. Local
+compilation, Android DEX generation, and JUnit tests used the previously verified
+official Morphe runtime and installed development tools; the pinned plugin remains
+unavailable through the local package-registry credentials.
+
+The final release audit found that AGP automatically included an unused Kotlin
+runtime in the Java-only extension. Release runtime dependencies exclude that
+library so it is not injected into LinkedIn. Both build and release workflows
+verify the actual MPP with the Android SDK's DEX parser and reject extension
+classes outside `app.linkedin.extension` before publishing or uploading the bundle.
 
 No LinkedIn APK was supplied, so real fingerprint matching, installation, sign-in,
 feed rendering, messaging, and media downloads have not been tested in the app.

@@ -19,6 +19,14 @@ extensions.configure<ApplicationAndroidComponentsExtension> {
     }
 }
 
+configurations.configureEach {
+    // This extension contains Java only. Keep AGP's automatic Kotlin runtime
+    // out of the DEX merged into LinkedIn, which supplies its own runtime.
+    if (name == "releaseRuntimeClasspath") {
+        exclude(group = "org.jetbrains.kotlin", module = "kotlin-stdlib")
+    }
+}
+
 dependencies {
     testImplementation("junit:junit:4.13.2")
 }

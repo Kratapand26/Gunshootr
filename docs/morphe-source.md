@@ -45,8 +45,9 @@ generates `patches-list.json`, and publishes these release files:
 
 The bundle manifest, release tag, download URL, and metadata use the same version.
 The workflow also updates the metadata on `main`. Failed builds do not publish a
-release. Keep the original supported app versions unless an actual compatibility
-change is reviewed and tested.
+release. A bundle check rejects accidental runtime libraries in the LinkedIn
+extension, and test reports are retained as build artifacts. Keep the original
+supported app versions unless an actual compatibility change is reviewed and tested.
 
 See [GitHub releases](https://github.com/Kratapand26/Gunshootr/releases) for available
 bundles and the [LinkedIn review](linkedin-port-review.md) for validation limits.
