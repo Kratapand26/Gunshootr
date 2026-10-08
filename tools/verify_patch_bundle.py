@@ -1,6 +1,8 @@
-"""Check the published container and the classes injected by its Java extension."""
+"""Check Morphe source metadata, the bundle, and its injected Java extension."""
 
 import argparse
+from datetime import datetime
+import json
 from pathlib import Path
 import re
 import subprocess
@@ -11,6 +13,29 @@ import zipfile
 def require(condition, message):
     if not condition:
         raise ValueError(message)
+
+
+def verify_metadata(path, version):
+    metadata = json.loads(path.read_text(encoding="utf-8"))
+    require(isinstance(metadata, dict), "Source metadata must be a JSON object")
+    created_at = metadata.get("created_at")
+    # Morphe 1.34.0 deserializes custom-source timestamps with kotlinx-datetime's
+    # LocalDateTime serializer, then interprets them as UTC. Offset suffixes fail
+    # before it can download the bundle (MorpheApp/morphe-manager a0e19e5).
+    require(
+        isinstance(created_at, str)
+        and re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}", created_at),
+        "created_at must be UTC YYYY-MM-DDTHH:MM:SS without Z or a timezone offset",
+    )
+    datetime.strptime(created_at, "%Y-%m-%dT%H:%M:%S")
+    require(metadata.get("version") == version, "Metadata and bundle versions differ")
+    require(
+        metadata.get("download_url")
+        == f"https://github.com/Kratapand26/Gunshootr/releases/download/v{version}/patches-{version}.mpp",
+        "Metadata must point to the matching GitHub release bundle",
+    )
+    description = metadata.get("description")
+    require(isinstance(description, str) and description.strip(), "Missing source description")
 
 
 def manifest_attributes(data):
@@ -83,13 +108,15 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("bundle", type=Path)
     parser.add_argument("--version", required=True)
+    parser.add_argument("--metadata", required=True, type=Path)
     parser.add_argument("--dexdump", required=True, type=Path)
     arguments = parser.parse_args()
     try:
+        verify_metadata(arguments.metadata, arguments.version)
         count = verify(arguments.bundle, arguments.version, arguments.dexdump)
     except (ValueError, KeyError, OSError, zipfile.BadZipFile) as error:
         parser.exit(1, f"Bundle verification failed: {error}\n")
-    print(f"Bundle {arguments.version} verified: Android DEX and {count} LinkedIn extension classes.")
+    print(f"Bundle {arguments.version} verified: source metadata, Android DEX, and {count} LinkedIn extension classes.")
 
 
 if __name__ == "__main__":

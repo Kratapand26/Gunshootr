@@ -21,6 +21,20 @@ Background checks follow Morphe's **Settings → Advanced → Updates** preferen
 Importing a local `.mpp` file does not enable updates; use the repository address
 for a source that can update remotely.
 
+If the source stays **Unnamed** with no patches, its metadata or bundle has not
+loaded successfully. Tap **Update** on that source card after the metadata fix.
+Check that its address is this repository or the direct metadata endpoint:
+
+```text
+https://raw.githubusercontent.com/Kratapand26/Gunshootr/main/patches-bundle.json
+```
+
+Morphe 1.34.0 reads `created_at` as a UTC local date and time. Gunshootr's old
+timestamp ending in `Z` failed that parser before the bundle could download.
+The release workflow now emits `YYYY-MM-DDTHH:MM:SS` without a timezone suffix,
+and both workflows check the timestamp and matching download URL before publishing
+or uploading a bundle. Adding a display name alone does not repair a download failure.
+
 Updating a patch source downloads the newer patches. Apply them to an original
 APK and install the newly patched app to receive the changes in that app.
 LinkedIn's declared compatibility remains **4.1.1255.1** and **4.1.1258**, with the

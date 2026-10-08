@@ -72,7 +72,9 @@ jobs:
         run: |
           VERSION="${{ steps.vars.outputs.version }}"
           TAG="${{ steps.vars.outputs.tag }}"
-          NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          # Custom sources deserialize created_at as a UTC LocalDateTime.
+          # A timezone suffix such as Z prevents Morphe from reading the metadata.
+          NOW=$(date -u +"%Y-%m-%dT%H:%M:%S")
 
           sed -i "s/^version=.*/version=${VERSION}/" gradle.properties
 
@@ -93,7 +95,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify Patch MPP Bundle
-        run: python3 tools/verify_patch_bundle.py "patches/build/libs/patches-${{ steps.vars.outputs.version }}.mpp" --version "${{ steps.vars.outputs.version }}" --dexdump "$ANDROID_HOME/build-tools/34.0.0/dexdump"
+        run: python3 tools/verify_patch_bundle.py "patches/build/libs/patches-${{ steps.vars.outputs.version }}.mpp" --version "${{ steps.vars.outputs.version }}" --metadata patches-bundle.json --dexdump "$ANDROID_HOME/build-tools/34.0.0/dexdump"
 
       - name: Upload Test Reports
         if: always()

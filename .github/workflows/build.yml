@@ -45,7 +45,7 @@ jobs:
         run: |
           VERSION=$(sed -n 's/^version=//p' gradle.properties)
           BUNDLE="patches/build/libs/patches-${VERSION}.mpp"
-          python3 tools/verify_patch_bundle.py "$BUNDLE" --version "$VERSION" --dexdump "$ANDROID_HOME/build-tools/34.0.0/dexdump"
+          python3 tools/verify_patch_bundle.py "$BUNDLE" --version "$VERSION" --metadata patches-bundle.json --dexdump "$ANDROID_HOME/build-tools/34.0.0/dexdump"
           echo "path=$BUNDLE" >> "$GITHUB_OUTPUT"
 
       - name: Upload Test Reports
