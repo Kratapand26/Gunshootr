@@ -13,7 +13,7 @@ val quickDictDefinePatch = resourcePatch(
     default = true,
 ) {
     category("Dict Box")
-    compatibleWith("com.grandsons.dictsharp")
+    compatibleWith(DictBoxConstants.COMPATIBILITY_DICTBOX)
 
     execute {
         val logger = Logger.getLogger(this::class.java.name)
@@ -97,22 +97,36 @@ val quickDictDefinePatch = resourcePatch(
                 val targetName = getAttr(targetActivity, "name")
                 targetActivity.setAttributeNS(NS_ANDROID, "android:exported", "true")
 
-                // Add TRANSLATE filter (labeled "Translate")
-                if (!hasActionAndLabel(targetActivity, "android.intent.action.TRANSLATE", "Translate")) {
+                // 1. android.intent.action.DEFINE (without MIME type - for Android system "Define" chooser / PDF readers)
+                if (!hasAction(targetActivity, "android.intent.action.DEFINE", label = "Define", mimeType = null)) {
+                    targetActivity.appendChild(
+                        createFilter(manifest, "android.intent.action.DEFINE", label = "Define", mimeType = null)
+                    )
+                }
+
+                // 2. android.intent.action.DEFINE (with text/plain)
+                if (!hasAction(targetActivity, "android.intent.action.DEFINE", label = "Define", mimeType = "text/plain")) {
+                    targetActivity.appendChild(
+                        createFilter(manifest, "android.intent.action.DEFINE", label = "Define", mimeType = "text/plain")
+                    )
+                }
+
+                // 3. android.intent.action.TRANSLATE (without MIME type - for Android system "Translate" button)
+                if (!hasAction(targetActivity, "android.intent.action.TRANSLATE", label = "Translate", mimeType = null)) {
+                    targetActivity.appendChild(
+                        createFilter(manifest, "android.intent.action.TRANSLATE", label = "Translate", mimeType = null)
+                    )
+                }
+
+                // 4. android.intent.action.TRANSLATE (with text/plain)
+                if (!hasAction(targetActivity, "android.intent.action.TRANSLATE", label = "Translate", mimeType = "text/plain")) {
                     targetActivity.appendChild(
                         createFilter(manifest, "android.intent.action.TRANSLATE", label = "Translate", mimeType = "text/plain")
                     )
                 }
 
-                // Add TRANSLATE filter (labeled "Define")
-                if (!hasActionAndLabel(targetActivity, "android.intent.action.TRANSLATE", "Define")) {
-                    targetActivity.appendChild(
-                        createFilter(manifest, "android.intent.action.TRANSLATE", label = "Define", mimeType = "text/plain")
-                    )
-                }
-
-                // Add PROCESS_TEXT filter (labeled "Define")
-                if (!hasActionAndLabel(targetActivity, "android.intent.action.PROCESS_TEXT", "Define")) {
+                // 5. android.intent.action.PROCESS_TEXT (labeled "Define")
+                if (!hasAction(targetActivity, "android.intent.action.PROCESS_TEXT", label = "Define", mimeType = "text/plain")) {
                     targetActivity.appendChild(
                         createFilter(manifest, "android.intent.action.PROCESS_TEXT", label = "Define", mimeType = "text/plain")
                     )
@@ -146,6 +160,15 @@ val quickDictDefinePatch = resourcePatch(
                         createFilter(manifest, "android.intent.action.PROCESS_TEXT", mimeType = "text/plain")
                     )
                     alias.appendChild(
+                        createFilter(manifest, "android.intent.action.DEFINE", mimeType = null)
+                    )
+                    alias.appendChild(
+                        createFilter(manifest, "android.intent.action.DEFINE", mimeType = "text/plain")
+                    )
+                    alias.appendChild(
+                        createFilter(manifest, "android.intent.action.TRANSLATE", mimeType = null)
+                    )
+                    alias.appendChild(
                         createFilter(manifest, "android.intent.action.TRANSLATE", mimeType = "text/plain")
                     )
 
@@ -169,16 +192,39 @@ private fun getAttr(element: Element, name: String): String {
     return element.getAttribute(name)
 }
 
-private fun hasActionAndLabel(element: Element, actionName: String, label: String): Boolean {
+private fun hasAction(
+    element: Element,
+    actionName: String,
+    label: String? = null,
+    mimeType: String? = null,
+): Boolean {
     val filters = element.getElementsByTagName("intent-filter")
     for (i in 0 until filters.length) {
         val filter = filters.item(i) as? Element ?: continue
-        if (getAttr(filter, "label") == label) {
-            val actions = filter.getElementsByTagName("action")
-            for (j in 0 until actions.length) {
-                val action = actions.item(j) as? Element ?: continue
-                if (getAttr(action, "name") == actionName) return true
+        if (label != null && getAttr(filter, "label") != label) continue
+
+        val actions = filter.getElementsByTagName("action")
+        var actionMatch = false
+        for (j in 0 until actions.length) {
+            val action = actions.item(j) as? Element ?: continue
+            if (getAttr(action, "name") == actionName) {
+                actionMatch = true
+                break
             }
+        }
+        if (!actionMatch) continue
+
+        val dataNodes = filter.getElementsByTagName("data")
+        val filterMime = if (dataNodes.length > 0) {
+            getAttr(dataNodes.item(0) as Element, "mimeType")
+        } else {
+            ""
+        }
+
+        if (mimeType == null) {
+            if (filterMime.isEmpty()) return true
+        } else {
+            if (filterMime == mimeType) return true
         }
     }
     return false

@@ -47,16 +47,16 @@
     },
     {
       "name": "Bypass Anti-Tamper",
-      "description": "Bypasses the signature check library (libyrf.so) that crashes the app upon modification by Morphe.",
+      "description": "Bypasses the signature check library (libyrf.so) and routes text intents (Define/Translate) directly to definition lookup.",
       "default": true,
       "category": "Dict Box",
       "dependencies": [],
       "compatiblePackages": [
         {
           "packageName": "com.grandsons.dictsharp",
-          "name": null,
+          "name": "Dict Box",
           "description": null,
-          "apkFileType": null,
+          "apkFileType": "APK",
           "appIconColor": null,
           "signatures": null,
           "targets": [
@@ -496,9 +496,9 @@
       "compatiblePackages": [
         {
           "packageName": "com.grandsons.dictsharp",
-          "name": null,
+          "name": "Dict Box",
           "description": null,
-          "apkFileType": null,
+          "apkFileType": "APK",
           "appIconColor": null,
           "signatures": null,
           "targets": [
