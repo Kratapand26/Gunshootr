@@ -57,7 +57,7 @@ public class DiagnosticsSafetyTest {
         File file = File.createTempFile("gunshootr-diagnostics-", ".txt");
         try {
             Diagnostics.appendToFile(file, "download https://media.licdn.com/private person@example.com");
-            String stored = Files.readString(file.toPath(), StandardCharsets.UTF_8);
+            String stored = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
             assertTrue(stored.contains("[link]"));
             assertFalse(stored.contains("private"));
             assertFalse(stored.contains("person@example.com"));
