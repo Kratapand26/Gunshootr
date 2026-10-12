@@ -40,9 +40,7 @@ public final class NavPanelPatch {
                 }
             }
 
-            Constructor<?> constructor = viewData.getConstructor(
-                    CharSequence.class, sectionType, chevronType, List.class, widget);
-            Object entry = constructor.newInstance(TITLE, savedPosts, chevronRight, Collections.emptyList(), null);
+            Object entry = createSectionEntry(viewData, savedPosts, chevronRight, sectionType, chevronType, widget);
 
             ArrayList<Object> result = new ArrayList<>(list);
             int index = result.size();
@@ -59,6 +57,51 @@ public final class NavPanelPatch {
             Diagnostics.error("addSettingsItem failed", t);
             return list;
         }
+    }
+
+    private static Object createSectionEntry(
+            Class<?> viewData, Object savedPosts, Object chevronRight,
+            Class<?> sectionType, Class<?> chevronType, Class<?> widget) throws ReflectiveOperationException {
+        // Try direct constructors with String or CharSequence first
+        for (Class<?> titleType : new Class<?>[] { String.class, CharSequence.class }) {
+            try {
+                Constructor<?> c = viewData.getConstructor(titleType, sectionType, chevronType, List.class, widget);
+                return c.newInstance(TITLE, savedPosts, chevronRight, Collections.emptyList(), null);
+            } catch (NoSuchMethodException ignored) {
+            }
+            try {
+                Constructor<?> c = viewData.getConstructor(titleType, sectionType, chevronType, List.class, int.class);
+                return c.newInstance(TITLE, savedPosts, chevronRight, Collections.emptyList(), 24);
+            } catch (NoSuchMethodException ignored) {
+            }
+        }
+
+        // Generic constructor discovery across LinkedIn versions
+        for (Constructor<?> c : viewData.getDeclaredConstructors()) {
+            Class<?>[] p = c.getParameterTypes();
+            if (p.length >= 4 && CharSequence.class.isAssignableFrom(p[0])
+                    && (p[1] == sectionType || p[1].isAssignableFrom(sectionType))
+                    && (p[2] == chevronType || p[2].isAssignableFrom(chevronType))
+                    && List.class.isAssignableFrom(p[3])) {
+                Object[] args = new Object[p.length];
+                args[0] = TITLE;
+                args[1] = savedPosts;
+                args[2] = chevronRight;
+                args[3] = Collections.emptyList();
+                for (int i = 4; i < p.length; i++) {
+                    if (p[i] == int.class) {
+                        args[i] = 24;
+                    } else if (p[i] == boolean.class) {
+                        args[i] = false;
+                    } else {
+                        args[i] = null;
+                    }
+                }
+                c.setAccessible(true);
+                return c.newInstance(args);
+            }
+        }
+        throw new NoSuchMethodException("No matching HomeNavPanelSectionV2ViewData constructor found");
     }
 
     /** Injected before every return of HomeNavPanelSectionV2Presenter.onBind(ViewDataBinding). */
