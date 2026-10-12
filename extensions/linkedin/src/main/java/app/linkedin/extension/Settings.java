@@ -15,7 +15,7 @@ import android.util.Log;
 @SuppressWarnings("unused")
 public final class Settings {
     static final String TAG = "LinkedInPatches";
-    static final String UPSTREAM_VERSION = "1.0.0";
+    static final String UPSTREAM_VERSION = "1.1.0";
     private static final String PREFS = "morphe_linkedin_settings";
 
     static final String HIDE_ADS = "hide_ads";
@@ -46,6 +46,8 @@ public final class Settings {
     static final String[] DOWNLOAD_BASE_DIRS = {"Download", "Pictures", "Movies", "DCIM"};
     static final String DEFAULT_DOWNLOAD_FOLDER = "LinkedIn";
     static final String DEBUG_LOGGING = "debug_logging";
+    static final String LANGUAGE = "language";
+    static final String DEFAULT_LANGUAGE = "en";
 
     private static SharedPreferences prefs;
 
@@ -287,7 +289,17 @@ public final class Settings {
         if (p != null) p.edit().putBoolean(key, value).apply();
     }
 
-    private static SharedPreferences prefs() {
+    /** English by default; another language or the device locale can be explicitly selected. */
+    static String language() {
+        try {
+            return getString(LANGUAGE, DEFAULT_LANGUAGE);
+        } catch (ClassCastException ignored) {
+            // Old backups could import any boolean/string key before language selection existed.
+            return DEFAULT_LANGUAGE;
+        }
+    }
+
+    static SharedPreferences prefs() {
         if (prefs == null) {
             Context context = app();
             if (context != null) prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
@@ -308,6 +320,6 @@ public final class Settings {
     }
 
     static void debugLog(String message) {
-        if (debug()) Log.d(TAG, message);
+        Diagnostics.debug(message);
     }
 }

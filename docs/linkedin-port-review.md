@@ -1,82 +1,106 @@
 # LinkedIn port review
 
-Reviewed on 8 October 2026. Source: **Michii Patches 1.0.0**, by **heyymichii**,
-commit `516e40f95aed928e225e21a34599d7936a6d6c59`.
+Reviewed on 12 October 2026. Source: **Michii Patches 1.1.0**, by **heyymichii**,
+commit `dbe97ce221d4e83c7a4f013850c4a435029ab9b8`. The local checkout and the
+`v1.1.0` tag both resolve to that exact commit.
 
 ## Scope and findings
 
-The review covered all LinkedIn Kotlin patch definitions and all 24 upstream Java
-extension classes, including network requests, settings backup, clipboard and share
-hooks, reflective access, feed scanning, settings navigation, and media downloads.
-Only these source files and their minimal extension configuration were imported.
-Upstream workflow files, dependency catalogs, executables, wrapper binaries, and
+The review covers changes from the previously reviewed Michii 1.0.0 source:
+diagnostics, language selection, translation generation, dialog styling, launcher
+shortcuts, and compatibility metadata. The source has 26 upstream Java classes
+and eleven language text tables. Only reviewed source and text were imported;
+upstream workflows, dependency catalogs, executables, wrapper binaries, and
 prebuilt extensions were not imported.
 
-No evidence of malware was found in the reviewed source. There are no added Android
-permissions, native libraries, downloaded code loaders, shell execution, credential
-collection, external analytics SDKs, or custom TLS trust bypasses in the imported
-extension. Settings use the patch's own private preferences. Clipboard access is
-used for cleaning copied links and explicitly requested settings backup/import.
+No evidence of malware was found in the reviewed changes. They add no Android
+permissions, native libraries, downloaded code loaders, shell execution,
+credential collection, external analytics SDKs, or custom TLS trust bypasses.
+Existing private preferences are retained so settings survive an update.
 Reflection reads LinkedIn UI/model fields and obtains the running app context;
 it does not load downloaded code.
 
-The upstream code allowed automatic background redirects to arbitrary hosts and
-read update responses without a size limit. The port validates every background
-redirect, requires HTTPS and expected service hosts, bounds response sizes, and
-limits decoded thumbnail dimensions. Media download URLs and filenames are also
-validated. Normal platform certificate verification is retained.
+The existing HTTPS host checks, validation of every background redirect, response
+size limits, media URL and filename validation, and thumbnail bounds are
+preserved. NetworkSafety, ShortLinkResolver, and UpdateChecker are unchanged from
+the previous reviewed port. Normal platform certificate verification is retained.
+
+## Diagnostics adaptations
+
+Upstream stores raw log entries and redacts the exported report later. Gunshootr
+redacts URLs, email addresses, LinkedIn identifiers, long numbers, and recognizable
+credential fields before writing diagnostic entries to Android logs or private
+storage. Original exceptions are not passed unredacted to the Android logger.
+Repeated messages are suppressed with bounded bookkeeping. Backend failures are
+contained so logging cannot interrupt a LinkedIn hook.
+
+Message text is truncated at 4,096 characters, followed by a truncation marker.
+The log is capped at 300 KiB and reports at 200 log lines. Large or damaged files
+are read and repaired with bounded tail allocations. Reports include recognized
+patch settings, rather than dumping every preference; personal download-folder
+names and unknown imported keys are omitted.
+
+Reports include app, Android, device, patch, and language details. They are copied
+to the clipboard only when **Copy diagnostic report** is tapped. Nothing is
+uploaded automatically. Reports still ask users to review their contents before
+posting; pattern-based redaction cannot identify every possible personal detail.
 
 ## Preserved behavior and adaptations
 
-All eleven features, bytecode fingerprints, compatibility versions **4.1.1255.1**
-and **4.1.1258**, and the experimental target are preserved. The original feature
-defaults are retained. Indonesian server labels used by the feed matching logic
-are intentionally preserved alongside English labels; translating those internal
-match strings would change filter behavior. All visible interface text is English.
+The eleven feature definitions, their defaults, and separate fingerprint files
+are unchanged in upstream 1.1.0. The new main-activity shortcut fingerprint and
+hook match that release. Gunshootr's shortcut identifier is retained; the shortcut
+now publishes at rank zero from the main screen, with a delayed refresh after
+LinkedIn registers its shortcuts. Dialog button tinting follows upstream's fix.
 
-Gunshootr names its settings screen and launcher shortcut and checks updates from
-`Kratapand26/Gunshootr`. Upstream version **1.0.0** remains visible in About, and
-the original author is credited. Gunshootr uses its own bundle version for source
-updates while retaining the upstream LinkedIn app version declarations. Settings
-activity registration is private and idempotent and does not change the app's SDK
-declarations, existing activities, or permissions.
+Compatibility and ordering match Michii 1.1.0 exactly: **4.1.1255.1**, **4.1.1259**,
+and the experimental target. Upstream replaced **4.1.1258** with **4.1.1259**.
+Gunshootr declares no additional app versions.
 
-Background requests are limited to these services:
+English is the default for settings, prompts, and messages on every device
+language. The upstream language chooser and optional translations are retained;
+automatic device language must be explicitly selected. Invalid imported language
+codes and non-text values from old backups fall back to English. Reviewed text compiles into Java lookup
+tables, with matching format placeholders required. Indonesian server labels used
+by feed matching remain unchanged because they identify LinkedIn content.
+
+Gunshootr brands the settings screen and launcher shortcut and checks updates from
+`Kratapand26/Gunshootr`. About credits the original author and shows upstream
+version **1.1.0** separately from Gunshootr's bundle version. The private,
+idempotent settings activity registration preserves existing activities,
+permissions, and SDK declarations.
+
+Background requests remain limited to:
 
 - `lnkd.in` and LinkedIn warning pages when short-link resolution is enabled.
-- HTTPS `licdn.com` media hosts for user-requested media and chooser previews.
-- The exact Gunshootr latest-release metadata endpoint on `api.github.com` when About is opened.
+- HTTPS `licdn.com` media hosts for requested media and chooser previews.
+- Gunshootr's exact latest-release metadata endpoint on `api.github.com` when About is opened.
 
-There is no automatic APK installation, patch download, or executable update.
+Credits and upstream support links open only after a user taps them. The extension
+has no automatic APK installation, patch download, or executable update.
 
 ## Validation and limits
 
-The Android extension compiled against API 34 and was converted to Android DEX.
-All patch sources compiled against Gunshootr's existing Morphe Patcher 1.13.0 API;
-no patcher or LinkedIn compatibility version was changed. The MPP includes both
-the patch DEX and the rebuilt LinkedIn extension DEX.
+**63 local tests passed:** 27 rotation tests, four LinkedIn metadata/manifest
+tests, 16 existing extension safety tests, ten diagnostics tests, and six
+language compatibility tests. New coverage checks redaction before storage,
+credential masking, log rotation, damaged large logs, report limits, preference
+filtering, English defaults, regional fallback, and compiled translations.
 
-**47 tests passed:** 27 existing rotation tests, four LinkedIn metadata/manifest
-tests, and 16 extension safety tests. Coverage includes spoofed hosts, TLS
-downgrades, redirect destination validation, oversized responses, executable link schemes,
-clipboard link preservation, download folder traversal, malformed payloads,
-original language matching, and original compatibility metadata.
+The exact translation generator compiled successfully in an isolated offline
+Gradle build. The extension compiled against Android API 34 and was converted to
+DEX; patch sources compiled against the existing Morphe Patcher 1.13.0 API. No
+patcher dependency change was needed. The MPP passed source metadata and Android
+DEX verification, including checks for unexpected extension namespaces.
 
-The full Gradle build and release tests passed on GitHub Actions. Release-variant
-unit tests are explicitly enabled through the typed AGP 9.1 variant API. Local
-compilation, Android DEX generation, and JUnit tests used the previously verified
-official Morphe runtime and installed development tools; the pinned plugin remains
-unavailable through the local package-registry credentials.
+The release workflow runs the full Gradle build and release-variant tests before
+publishing, retains their reports, and audits the actual MPP. Its timestamp check
+preserves the Morphe 1.34 custom-source import fix. The Java-only extension still
+excludes AGP's unused Kotlin runtime from its release dependencies.
 
-The final release audit found that AGP automatically included an unused Kotlin
-runtime in the Java-only extension. Release runtime dependencies exclude that
-library so it is not injected into LinkedIn. Both build and release workflows
-verify the actual MPP with the Android SDK's DEX parser and reject extension
-classes outside `app.linkedin.extension` before publishing or uploading the bundle.
-
-No LinkedIn APK was supplied, so real fingerprint matching, installation, sign-in,
-feed rendering, messaging, and media downloads have not been tested in the app.
-The built-in antivirus scanner was unavailable during validation; the malware
-assessment is based on source inspection and the compiled-bundle audit.
-This source review and these tests cannot certify every behavior of a patched
-LinkedIn APK or of the original app.
+No LinkedIn APK was supplied, so actual fingerprint matching, installation,
+sign-in, feed rendering, messaging, downloads, and launcher behavior have not been
+tested in LinkedIn. Windows Defender reported its service and antivirus disabled,
+so no antivirus scan is claimed. The assessment relies on source inspection,
+compilation, tests, and the compiled-bundle audit; it cannot certify every behavior
+of a patched APK or of the original app.

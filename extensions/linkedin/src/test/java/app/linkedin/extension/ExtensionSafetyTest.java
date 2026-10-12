@@ -131,7 +131,7 @@ public class ExtensionSafetyTest {
 
     @Test
     public void patchSourceVersionIsPreservedAndReleaseChecksCompareGunshootrVersions() {
-        assertEquals("1.0.0", Settings.UPSTREAM_VERSION);
+        assertEquals("1.1.0", Settings.UPSTREAM_VERSION);
         assertTrue(UpdateChecker.isNewer("1.0.6", "1.0.5"));
         assertTrue(UpdateChecker.isNewer("1.0.5", "1.0.5-dev.1"));
         assertFalse(UpdateChecker.isNewer("1.0.4", "1.0.5"));

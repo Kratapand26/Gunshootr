@@ -9,7 +9,6 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
-import android.util.Log;
 import android.util.LruCache;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -85,7 +84,7 @@ public final class SduiMediaDownload {
             pending = null;
             if (mediaByFragment.containsKey(fragment)) showDownloadButton(activity, fragment);
         } catch (Throwable t) {
-            Log.e(Settings.TAG, "onFragmentResumed failed", t);
+            Diagnostics.error("onFragmentResumed failed", t);
         }
     }
 
@@ -98,7 +97,7 @@ public final class SduiMediaDownload {
             if (activity == null) return;
             removeView(activity, DOWNLOAD_TAG);
         } catch (Throwable t) {
-            Log.e(Settings.TAG, "onFragmentPaused failed", t);
+            Diagnostics.error("onFragmentPaused failed", t);
         }
     }
 
@@ -231,12 +230,13 @@ public final class SduiMediaDownload {
             }
         };
 
-        new AlertDialog.Builder(activity)
-                .setTitle("Choose media")
-                .setAdapter(adapter, (dialog, which) -> download(activity, items.subList(which, which + 1)))
-                .setPositiveButton("All (" + items.size() + ")", (dialog, which) -> download(activity, items))
-                .setNegativeButton("Cancel", null)
+        AlertDialog dialog = new AlertDialog.Builder(activity)
+                .setTitle(I18n.tr("Choose media"))
+                .setAdapter(adapter, (d, which) -> download(activity, items.subList(which, which + 1)))
+                .setPositiveButton(I18n.f("All (%1$s)", items.size()), (d, which) -> download(activity, items))
+                .setNegativeButton(I18n.tr("Cancel"), null)
                 .show();
+        SettingsActivity.tintButtons(dialog, activity);
     }
 
     private static View row(Context context, MediaItem item, int position) {
@@ -254,7 +254,7 @@ public final class SduiMediaDownload {
         loadThumbnail(thumb, item.thumbnailUrl);
 
         TextView label = new TextView(context);
-        label.setText((position + 1) + ". " + item.label());
+        label.setText((position + 1) + ". " + (item.video ? I18n.f("Video %1$sp", item.size) : I18n.f("Photo %1$spx", item.size)));
         label.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
         label.setPadding(pad, 0, 0, 0);
         row.addView(label);

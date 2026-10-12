@@ -49,10 +49,12 @@ public final class SettingsActivity extends Activity {
     static final String AUTHOR = "Gunshootrr";
     static final String UPSTREAM_AUTHOR = "heyymichii";
     static final String BRAND = "Gunshootr Patches";
+    static final int ACCENT_DARK = 0xFF2DBCB1;
+    static final int ACCENT_LIGHT = 0xFF00897B;
     private static final String MORPHE_WEBSITE = "https://morphe.software";
-    /** Donation links; a row is only shown when its link is set. */
+    /** Donation links: Trakteer is shown in Indonesian, Ko-fi in every other language. */
     private static final String TRAKTEER_URL = "https://trakteer.id/heyymichii";
-    private static final String KOFI_URL = "";
+    private static final String KOFI_URL = "https://ko-fi.com/heyymichii";
 
     // region Settings model
 
@@ -131,7 +133,7 @@ public final class SettingsActivity extends Activity {
 
         if (Settings.isHideAdsIncluded() || Settings.isHidePromotedJobsIncluded()
                 || Settings.isHideSuggestedIncluded() || Settings.isHidePremiumIncluded()) {
-            Category ads = new Category("Ads & Promotions", IconDrawable.BLOCK);
+            Category ads = new Category("Ads & promotions", IconDrawable.BLOCK);
             if (Settings.isHideAdsIncluded()) {
                 ads.toggle(Settings.HIDE_ADS, true, "Hide ads", "\"Promoted\" posts in the feed.");
             }
@@ -144,8 +146,8 @@ public final class SettingsActivity extends Activity {
                         "\"Suggested\" posts from outside your network.");
             }
             if (Settings.isHidePremiumIncluded()) {
-                ads.toggle(Settings.HIDE_PREMIUM, true, "Hide Premium upsells",
-                        "Premium and AI cards in the feed, profiles, Jobs, and Me panel.");
+                ads.toggle(Settings.HIDE_PREMIUM, true, "Hide Premium promotions",
+                        "Premium and AI cards in the feed, profiles, Jobs, and the Me panel.");
             }
             categories.add(ads);
         }
@@ -154,21 +156,21 @@ public final class SettingsActivity extends Activity {
             Category feed = new Category("Feed", IconDrawable.FEED);
             if (Settings.isDisableDoubleTapLikeIncluded()) {
                 feed.toggle(Settings.DISABLE_DOUBLE_TAP_LIKE, true, "Disable double-tap like",
-                        "Double tapping no longer likes a post or photo.");
+                        "Double tapping a post or photo no longer likes it.");
             }
             if (Settings.isFeedFiltersIncluded()) {
                 feed.toggle(Settings.FOCUS_MODE, false, "Focus mode", "Hide like, comment, and repost counts.")
                         .toggle(Settings.HIDE_CELEBRATIONS, false, "Hide celebration posts",
-                                "Work anniversaries, new positions, and similar posts.")
+                                "Work anniversaries, new positions, and the like.")
                         .toggle(Settings.HIDE_FEED_JOBS, false, "Hide jobs in the feed",
                                 "Job cards in the home feed.")
                         .toggle(Settings.HIDE_REPOSTS, false, "Hide reposts",
                                 "Posts that reshare someone else's post.")
-                        .toggle(Settings.HIDE_VIDEO_POSTS, false, "Hide video posts", "Posts containing videos.")
+                        .toggle(Settings.HIDE_VIDEO_POSTS, false, "Hide video posts", "Posts that contain a video.")
                         .toggle(Settings.HIDE_NEW_POSTS_PILL, false, "Hide the \"New posts\" button",
-                                "The pill shown above the feed.")
+                                "The pill that appears at the top of the feed.")
                         .toggle(Settings.HIDE_TRANSLATION, false, "Hide \"See translation\"",
-                                "The translation button below posts in other languages.");
+                                "The translate button below posts in other languages.");
             }
             categories.add(feed);
         }
@@ -176,12 +178,13 @@ public final class SettingsActivity extends Activity {
         if (Settings.isDownloadMediaIncluded()) {
             categories.add(new Category("Download", IconDrawable.DOWNLOAD)
                     .toggle(Settings.DOWNLOAD_MEDIA, true, "Download button",
-                            "On photo, video, profile photo, and banner screens. Long press the button to "
-                                    + "open this page.")
+                            "On photo, video, profile photo, and banner screens. Long press the button to open "
+                                    + "this page.")
                     .value("Save location", new ValueRow() {
                         public String currentValue() {
                             return Settings.downloadSplitByType()
-                                    ? "Photos: " + Downloads.location(false) + "\nVideo: " + Downloads.location(true)
+                                    ? I18n.f("Photos: %1$s\nVideos: %2$s", Downloads.location(false),
+                                            Downloads.location(true))
                                     : Downloads.location(false);
                         }
 
@@ -196,7 +199,7 @@ public final class SettingsActivity extends Activity {
                     .value("Main folder", new ValueRow() {
                         public String currentValue() {
                             return Settings.downloadSplitByType()
-                                    ? "Automatic (Separate photos & videos is enabled)" : Settings.downloadBaseDir();
+                                    ? "Set automatically (Split photos & videos is on)" : Settings.downloadBaseDir();
                         }
 
                         public Runnable onClick() {
@@ -221,17 +224,17 @@ public final class SettingsActivity extends Activity {
                             return true;
                         }
                     })
-                    .toggle(Settings.DOWNLOAD_SPLIT_BY_TYPE, false, "Separate photos & videos",
-                            "Photos go to Pictures; videos go to Movies.", this::refresh));
+                    .toggle(Settings.DOWNLOAD_SPLIT_BY_TYPE, false, "Split photos & videos",
+                            "Photos go to Pictures, videos to Movies.", this::refresh));
         }
 
         if (Settings.isMessagingIncluded()) {
             categories.add(new Category("Chat", IconDrawable.CHAT)
                     .toggle(Settings.HIDE_SPONSORED_MESSAGES, true, "Hide sponsored messages",
-                            "Sponsored InMail and advertising messages in the chat list.")
+                            "Sponsored InMail and ad messages in the chat list.")
                     .toggle(Settings.GHOST_MODE, false, "Ghost mode",
-                            "Do not send typing indicators or automatic read status. Mark chats as "
-                                    + "read manually from the chat list when needed."));
+                            "Doesn't send \"typing\" or automatic \"seen\" status. Mark chats as read by hand from "
+                                    + "the chat list when you want to."));
         }
 
         if (Settings.isOpenLinksDirectlyIncluded() || Settings.isBlockTrackingIncluded()
@@ -241,25 +244,42 @@ public final class SettingsActivity extends Activity {
                 privacy.toggle(Settings.OPEN_LINKS_DIRECTLY, true, "Open links directly",
                         "Skip LinkedIn's warning page in posts and chats.");
                 privacy.toggle(Settings.RESOLVE_SHORT_LINKS, true, "Open lnkd.in short links directly",
-                        "Resolve lnkd.in links in the feed in the background, then open the destination directly.");
+                        "The real address of lnkd.in links in the feed is looked up in the background, then opened directly.");
             }
             if (Settings.isSanitizeShareLinksIncluded()) {
-                privacy.toggle(Settings.SANITIZE_SHARE_LINKS, true, "Clean shared links",
+                privacy.toggle(Settings.SANITIZE_SHARE_LINKS, true, "Clean share links",
                         "Remove tracking parameters (utm, trk, rcm, ...) when copying or sharing LinkedIn links.");
             }
             if (Settings.isBlockTrackingIncluded()) {
                 privacy.toggle(Settings.BLOCK_TRACKING, false, "Block tracking",
-                        "Stop sending most analytics events. Turn this off if a feature behaves unexpectedly.");
+                        "Doesn't send most analytics events. Turn off if something behaves oddly.");
             }
             categories.add(privacy);
         }
 
         categories.add(new Category("Other", IconDrawable.MORE)
+                .value("Language", new ValueRow() {
+                    public String currentValue() {
+                        return languageNames()[languageIndex()];
+                    }
+
+                    public Runnable onClick() {
+                        return SettingsActivity.this::chooseLanguage;
+                    }
+
+                    public boolean enabled() {
+                        return true;
+                    }
+                })
                 .action("Export settings", "Copy all settings to the clipboard as a backup.", this::exportSettings)
                 .action("Import settings", "Paste a settings backup from the clipboard.", this::importSettings)
-                .action("Restore defaults", "Reset all Gunshootr Patches settings.", this::resetSettings)
+                .action("Reset to defaults", "Reset all Gunshootr Patches settings.", this::resetSettings)
                 .toggle(Settings.DEBUG_LOGGING, false, "Diagnostic logging",
-                        "Write logs (LinkedInPatches tag) to help diagnose patch problems."));
+                        "Adds more details to the diagnostic report. Turn it on, repeat the problem, then copy "
+                                + "the report.")
+                .action("Copy diagnostic report", "App, device, and patch details with the recent log, for a bug "
+                        + "report. Links and IDs are removed.", this::copyDiagnosticReport)
+                .action("Clear diagnostic log", "Deletes the saved log.", this::clearDiagnosticLog));
         return categories;
     }
 
@@ -286,6 +306,18 @@ public final class SettingsActivity extends Activity {
     private ScrollView scroll;
     private View restartBanner;
 
+    /**
+     * Colors the buttons of a dialog shown over LinkedIn's own screens, whose theme makes button text transparent.
+     */
+    static void tintButtons(AlertDialog dialog, Context context) {
+        boolean dark = (context.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK)
+                == Configuration.UI_MODE_NIGHT_YES;
+        int color = dark ? ACCENT_DARK : ACCENT_LIGHT;
+        for (int which : new int[]{AlertDialog.BUTTON_POSITIVE, AlertDialog.BUTTON_NEGATIVE, AlertDialog.BUTTON_NEUTRAL}) {
+            if (dialog.getButton(which) != null) dialog.getButton(which).setTextColor(color);
+        }
+    }
+
     static void open(Context context) {
         Intent intent = new Intent(context, SettingsActivity.class);
         if (!(context instanceof Activity)) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
@@ -305,7 +337,7 @@ public final class SettingsActivity extends Activity {
         divider = dark ? 0xFF2A2A2A : 0xFFE3E5E8;
         textPrimary = dark ? 0xFFFFFFFF : 0xFF141414;
         textSecondary = dark ? 0xFFA6A6A6 : 0xFF5F6368;
-        accent = dark ? 0xFF2DBCB1 : 0xFF00897B;
+        accent = dark ? ACCENT_DARK : ACCENT_LIGHT;
 
         Window window = getWindow();
         window.setStatusBarColor(background);
@@ -363,7 +395,7 @@ public final class SettingsActivity extends Activity {
         } else {
             titleView.setVisibility(View.VISIBLE);
             searchField.setVisibility(View.GONE);
-            titleView.setText(openCategory == null ? "Gunshootr Patches" : openCategory.title);
+            titleView.setText(openCategory == null ? BRAND : I18n.tr(openCategory.title));
             if (openCategory == null) renderMain();
             else renderItems(openCategory.items, null);
         }
@@ -404,8 +436,8 @@ public final class SettingsActivity extends Activity {
         List<String> names = new ArrayList<>();
         for (Category category : categories) {
             for (Item item : category.items) {
-                String haystack = (item.title + " " + (item.summary == null ? "" : item.summary) + " "
-                        + category.title).toLowerCase(Locale.ROOT);
+                String haystack = (I18n.tr(item.title) + " " + (item.summary == null ? "" : I18n.tr(item.summary)) + " "
+                        + I18n.tr(category.title)).toLowerCase(Locale.ROOT);
                 if (q.isEmpty() || haystack.contains(q)) {
                     found.add(item);
                     names.add(category.title);
@@ -436,12 +468,12 @@ public final class SettingsActivity extends Activity {
         back.setOnClickListener(v -> onBackPressed());
         bar.addView(back);
 
-        titleView = text("Gunshootr Patches", 22, textPrimary, true);
+        titleView = text("Michii Patches", 22, textPrimary, true);
         titleView.setPadding(dp(12), 0, 0, 0);
         bar.addView(titleView, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 
         searchField = new EditText(this);
-        searchField.setHint("Search settings");
+        searchField.setHint(I18n.tr("Search settings"));
         searchField.setSingleLine(true);
         searchField.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
         searchField.setTextColor(textPrimary);
@@ -562,7 +594,7 @@ public final class SettingsActivity extends Activity {
         LinearLayout texts = new LinearLayout(this);
         texts.setOrientation(LinearLayout.VERTICAL);
         if (categoryName != null) {
-            TextView category = text(categoryName.toUpperCase(Locale.ROOT), 11, accent, true);
+            TextView category = text(I18n.tr(categoryName).toUpperCase(Locale.ROOT), 11, accent, true);
             category.setLetterSpacing(0.06f);
             texts.addView(category);
         }
@@ -608,7 +640,7 @@ public final class SettingsActivity extends Activity {
         TextView updateTitle = text("Checking for updates…", 17, accent, true);
         updateTitle.setGravity(Gravity.CENTER);
         update.addView(updateTitle);
-        TextView updateBody = text("You are using " + BRAND + " version " + Settings.patchesVersion(), 15,
+        TextView updateBody = text(I18n.f("You are using %1$s version %2$s", BRAND, Settings.patchesVersion()), 15,
                 textSecondary, false);
         updateBody.setGravity(Gravity.CENTER);
         updateBody.setPadding(0, dp(6), 0, 0);
@@ -619,35 +651,37 @@ public final class SettingsActivity extends Activity {
         UpdateChecker.check((status, latest) -> {
             switch (status) {
                 case UPDATE_AVAILABLE:
-                    updateTitle.setText("Update available");
-                    updateBody.setText("You are using version " + Settings.patchesVersion() + ".\n\nUpdate available: "
-                            + latest + "\n\nTo update, patch LinkedIn again with Morphe Manager.");
+                    updateTitle.setText(I18n.tr("Update available"));
+                    updateBody.setText(I18n.f("You are using version %1$s.\n\nUpdate available: %2$s\n\n"
+                            + "To update, patch LinkedIn again with Morphe Manager.", Settings.patchesVersion(), latest));
                     break;
                 case UP_TO_DATE:
-                    updateTitle.setText("Up to date");
+                    updateTitle.setText(I18n.tr("Up to date"));
                     updateBody.setText(installed);
                     break;
                 case NO_RELEASE:
-                    updateTitle.setText("No stable release yet");
-                    updateBody.setText(installed + "\n\nThere is no stable GitHub release to compare against.");
+                    updateTitle.setText(I18n.tr("No stable release yet"));
+                    updateBody.setText(installed + "\n\n"
+                            + I18n.tr("There is no stable release on GitHub to compare with yet."));
                     break;
                 default:
-                    updateTitle.setText("Could not connect");
-                    updateBody.setText(installed + "\n\nCheck your internet connection, then reopen this page.");
+                    updateTitle.setText(I18n.tr("Can't connect"));
+                    updateBody.setText(installed + "\n\n"
+                            + I18n.tr("Check your internet connection, then open this page again."));
                     break;
             }
         });
 
-        box.addView(sectionTitle("Project links"));
+        box.addView(sectionTitle("Official links"));
         LinearLayout links = new LinearLayout(this);
         links.setOrientation(LinearLayout.VERTICAL);
         links.setBackground(outlined());
         String repo = "https://github.com/" + UpdateChecker.REPO;
-        if (!TRAKTEER_URL.isEmpty()) {
+        // Trakteer takes Indonesian payment methods, Ko-fi international ones.
+        if ("id".equals(I18n.language())) {
             addLink(links, IconDrawable.HEART, "Support the upstream author (Trakteer)", v -> openUrl(TRAKTEER_URL));
-        }
-        if (!KOFI_URL.isEmpty()) {
-            addLink(links, IconDrawable.HEART, "Donate (Ko-fi)", v -> openUrl(KOFI_URL));
+        } else {
+            addLink(links, IconDrawable.HEART, "Support the upstream author (Ko-fi)", v -> openUrl(KOFI_URL));
         }
         addLink(links, IconDrawable.CODE, "GitHub", v -> openUrl(repo));
         addLink(links, IconDrawable.HISTORY, "Changelog", v -> openUrl(repo + "/releases"));
@@ -656,8 +690,8 @@ public final class SettingsActivity extends Activity {
         addLink(links, IconDrawable.PEOPLE, "Credits", v -> showCredits());
         box.addView(links, matchWidth());
 
-        TextView disclaimer = text("This is not an official LinkedIn app. " + BRAND + " is independent of the Morphe project.",
-                12, textSecondary, false);
+        TextView disclaimer = text(I18n.f("Not an official LinkedIn app. %1$s is not part of the Morphe project.",
+                BRAND), 12, textSecondary, false);
         disclaimer.setGravity(Gravity.CENTER);
         disclaimer.setPadding(0, dp(16), 0, 0);
         box.addView(disclaimer);
@@ -666,13 +700,9 @@ public final class SettingsActivity extends Activity {
     }
 
     /** Which patches were applied when this LinkedIn was patched. */
-    private void showPatchStatus() {
-        LinearLayout box = cardBox("Patch status", "Features included when this LinkedIn app was patched.");
-        LinearLayout list = new LinearLayout(this);
-        list.setOrientation(LinearLayout.VERTICAL);
-        list.setBackground(outlined());
-
-        Object[][] patches = {
+    /** {patch name, applied} for every patch, as named in Morphe Manager. */
+    static Object[][] patches() {
+        return new Object[][]{
                 {"Hide ads", Settings.isHideAdsIncluded()},
                 {"Hide promoted jobs", Settings.isHidePromotedJobsIncluded()},
                 {"Hide suggested posts", Settings.isHideSuggestedIncluded()},
@@ -685,6 +715,15 @@ public final class SettingsActivity extends Activity {
                 {"Sanitize share links", Settings.isSanitizeShareLinksIncluded()},
                 {"Block tracking", Settings.isBlockTrackingIncluded()},
         };
+    }
+
+    private void showPatchStatus() {
+        LinearLayout box = cardBox("Patch status", "Patches applied when this LinkedIn was patched.");
+        LinearLayout list = new LinearLayout(this);
+        list.setOrientation(LinearLayout.VERTICAL);
+        list.setBackground(outlined());
+
+        Object[][] patches = patches();
         for (int i = 0; i < patches.length; i++) {
             if (i > 0) list.addView(linkDivider());
             boolean included = (Boolean) patches[i][1];
@@ -694,7 +733,7 @@ public final class SettingsActivity extends Activity {
             row.setPadding(dp(18), dp(14), dp(18), dp(14));
             row.addView(text((String) patches[i][0], 16, textPrimary, false),
                     new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
-            TextView state = text(included ? "Included" : "Not included", 14,
+            TextView state = text(included ? "Applied" : "Not applied", 14,
                     included ? accent : textSecondary, true);
             row.addView(state);
             list.addView(row);
@@ -704,15 +743,15 @@ public final class SettingsActivity extends Activity {
     }
 
     private void showCredits() {
-        LinearLayout box = cardBox("Credits", "People and projects behind " + BRAND + ".");
+        LinearLayout box = cardBox("Credits", I18n.f("The people and projects behind %1$s.", BRAND));
         box.addView(creditCard(IconDrawable.PEOPLE, AUTHOR, "Maintainer of " + BRAND,
                 "github.com/Kratapand26/Gunshootr", "https://github.com/Kratapand26/Gunshootr"));
         box.addView(creditCard(IconDrawable.PEOPLE, UPSTREAM_AUTHOR, "Original LinkedIn patches and extension",
                 "github.com/heyymichii/michii-patches", "https://github.com/heyymichii/michii-patches"));
-        box.addView(creditCard(IconDrawable.CODE, "Morphe", "Patcher, Morphe Manager, and patch template",
+        box.addView(creditCard(IconDrawable.CODE, "Morphe", "Patcher, Morphe Manager, and the patch template",
                 "morphe.software", MORPHE_WEBSITE));
-        box.addView(creditCard(IconDrawable.INFO, "LinkedIn", "Original app. " + BRAND
-                + " is not affiliated with LinkedIn.", null, null));
+        box.addView(creditCard(IconDrawable.INFO, "LinkedIn",
+                I18n.f("The original app. %1$s is not affiliated with LinkedIn.", BRAND), null, null));
         showCard(box);
     }
 
@@ -826,13 +865,70 @@ public final class SettingsActivity extends Activity {
         try {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(url)));
         } catch (Exception e) {
-            Downloads.toast(this, "Could not open the link");
+            Downloads.toast(this, "Can't open the link");
         }
     }
 
     // endregion
 
+    // region Language
+
+    /** "auto" followed by every language that has a translation file. */
+    private static String[] languageCodes() {
+        List<String> codes = new ArrayList<>();
+        codes.add(I18n.LANGUAGE_AUTO);
+        codes.addAll(Translations.LANGUAGES.keySet());
+        return codes.toArray(new String[0]);
+    }
+
+    /** Language names are shown in their own language; only the automatic entry is translated. */
+    private static String[] languageNames() {
+        String[] codes = languageCodes();
+        String[] names = new String[codes.length];
+        names[0] = I18n.tr("Automatic (device language)");
+        for (int i = 1; i < codes.length; i++) names[i] = Translations.LANGUAGES.get(codes[i]);
+        return names;
+    }
+
+    private int languageIndex() {
+        String current = Settings.language();
+        String[] codes = languageCodes();
+        for (int i = 0; i < codes.length; i++) if (codes[i].equals(current)) return i;
+        return 0;
+    }
+
+    private void chooseLanguage() {
+        String[] codes = languageCodes();
+        new AlertDialog.Builder(this, dialogTheme())
+                .setTitle(I18n.tr("Language"))
+                .setSingleChoiceItems(languageNames(), languageIndex(), (dialog, which) -> {
+                    Settings.setString(Settings.LANGUAGE, codes[which]);
+                    dialog.dismiss();
+                    // Rebuild the screen so every text uses the new language.
+                    recreate();
+                })
+                .setNegativeButton(I18n.tr("Cancel"), null)
+                .show();
+    }
+
+    // endregion
+
     // region Backup
+
+    private void copyDiagnosticReport() {
+        try {
+            ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+            clipboard.setPrimaryClip(ClipData.newPlainText(BRAND, Diagnostics.report(this)));
+            Downloads.toast(this, "Diagnostic report copied. Paste it into your bug report.");
+        } catch (Exception e) {
+            Downloads.toast(this, I18n.f("Export failed: %1$s", e.getMessage()));
+        }
+    }
+
+    private void clearDiagnosticLog() {
+        Diagnostics.clear();
+        Downloads.toast(this, "Diagnostic log cleared");
+    }
 
     private void exportSettings() {
         try {
@@ -840,13 +936,13 @@ public final class SettingsActivity extends Activity {
             clipboard.setPrimaryClip(ClipData.newPlainText(BRAND, Settings.exportJson()));
             Downloads.toast(this, "Settings copied to the clipboard");
         } catch (Exception e) {
-            Downloads.toast(this, "Export failed: " + e.getMessage());
+            Downloads.toast(this, I18n.f("Export failed: %1$s", e.getMessage()));
         }
     }
 
     private void importSettings() {
         EditText input = new EditText(this);
-        input.setHint("Paste your settings backup here");
+        input.setHint(I18n.tr("Paste a settings backup here"));
         input.setMinLines(4);
         input.setGravity(Gravity.TOP);
         ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
@@ -859,33 +955,33 @@ public final class SettingsActivity extends Activity {
         box.addView(input, matchWidth());
 
         new AlertDialog.Builder(this, dialogTheme())
-                .setTitle("Import settings")
+                .setTitle(I18n.tr("Import settings"))
                 .setView(box)
-                .setPositiveButton("Import", (dialog, which) -> {
+                .setPositiveButton(I18n.tr("Import"), (dialog, which) -> {
                     try {
                         int count = Settings.importJson(input.getText().toString());
-                        Downloads.toast(this, count + " settings imported");
+                        Downloads.toast(this, I18n.f("%1$s settings imported", count));
                         refresh();
                         showRestartBanner();
                     } catch (Exception e) {
                         Downloads.toast(this, "Invalid backup");
                     }
                 })
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton(I18n.tr("Cancel"), null)
                 .show();
     }
 
     private void resetSettings() {
         new AlertDialog.Builder(this, dialogTheme())
-                .setTitle("Restore defaults?")
-                .setMessage("All settings for " + BRAND + " will be reset, including the download location.")
-                .setPositiveButton("Reset", (dialog, which) -> {
+                .setTitle(I18n.tr("Reset to defaults?"))
+                .setMessage(I18n.f("All %1$s settings will be reset, including the download location.", BRAND))
+                .setPositiveButton(I18n.tr("Reset"), (dialog, which) -> {
                     Settings.resetAll();
-                    Downloads.toast(this, "Default settings restored");
+                    Downloads.toast(this, "Settings reset to defaults");
                     refresh();
                     showRestartBanner();
                 })
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton(I18n.tr("Cancel"), null)
                 .show();
     }
 
@@ -900,13 +996,13 @@ public final class SettingsActivity extends Activity {
         for (int i = 0; i < dirs.length; i++) if (dirs[i].equals(current)) checked = i;
 
         new AlertDialog.Builder(this, dialogTheme())
-                .setTitle("Main folder")
+                .setTitle(I18n.tr("Main folder"))
                 .setSingleChoiceItems(dirs, checked, (dialog, which) -> {
                     Settings.setString(Settings.DOWNLOAD_BASE_DIR, dirs[which]);
                     refresh();
                     dialog.dismiss();
                 })
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton(I18n.tr("Cancel"), null)
                 .show();
     }
 
@@ -918,8 +1014,8 @@ public final class SettingsActivity extends Activity {
         input.setHint(Settings.DEFAULT_DOWNLOAD_FOLDER);
         input.setSelection(input.getText().length());
 
-        TextView help = text("Use \"/\" for nested subfolders, such as LinkedIn/Media. "
-                + "Leave blank to save directly in the main folder.", 13, textSecondary, false);
+        TextView help = text("Use \"/\" for nested folders, for example LinkedIn/Media. "
+                + "Leave empty to save directly in the main folder.", 13, textSecondary, false);
         help.setPadding(0, dp(8), 0, 0);
 
         LinearLayout box = new LinearLayout(this);
@@ -929,17 +1025,17 @@ public final class SettingsActivity extends Activity {
         box.addView(help);
 
         new AlertDialog.Builder(this, dialogTheme())
-                .setTitle("Subfolder name")
+                .setTitle(I18n.tr("Subfolder name"))
                 .setView(box)
-                .setPositiveButton("Save", (dialog, which) -> {
+                .setPositiveButton(I18n.tr("Save"), (dialog, which) -> {
                     Settings.setString(Settings.DOWNLOAD_FOLDER, Settings.sanitizeFolder(input.getText().toString()));
                     refresh();
                 })
-                .setNeutralButton("Default", (dialog, which) -> {
+                .setNeutralButton(I18n.tr("Default"), (dialog, which) -> {
                     Settings.setString(Settings.DOWNLOAD_FOLDER, Settings.DEFAULT_DOWNLOAD_FOLDER);
                     refresh();
                 })
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton(I18n.tr("Cancel"), null)
                 .show();
     }
 
@@ -984,7 +1080,7 @@ public final class SettingsActivity extends Activity {
         ImageButton button = new ImageButton(this);
         button.setImageDrawable(new IconDrawable(icon, textPrimary));
         button.setBackground(ripple(true));
-        button.setContentDescription(description);
+        button.setContentDescription(I18n.tr(description));
         int pad = dp(13);
         button.setPadding(pad, pad, pad, pad);
         button.setLayoutParams(new LinearLayout.LayoutParams(dp(50), dp(50)));
@@ -993,7 +1089,7 @@ public final class SettingsActivity extends Activity {
 
     private TextView text(String value, int sp, int color, boolean bold) {
         TextView view = new TextView(this);
-        view.setText(value);
+        view.setText(I18n.tr(value));
         view.setTextSize(TypedValue.COMPLEX_UNIT_SP, sp);
         view.setTextColor(color);
         if (bold) view.setTypeface(Typeface.create("sans-serif-medium", Typeface.NORMAL));

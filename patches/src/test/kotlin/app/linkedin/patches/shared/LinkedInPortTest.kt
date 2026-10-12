@@ -31,7 +31,7 @@ class LinkedInPortTest {
             assertTrue(it.default)
             val compatibility = it.compatibility!!.single()
             assertEquals("com.linkedin.android", compatibility.packageName)
-            assertEquals(listOf("4.1.1255.1", "4.1.1258", null), compatibility.targets.map { target -> target.version })
+            assertEquals(listOf("4.1.1255.1", "4.1.1259", null), compatibility.targets.map { target -> target.version })
             assertTrue(compatibility.targets.last().isExperimental)
             assertTrue(it.dependencies.isNotEmpty())
         }

@@ -37,9 +37,9 @@ or uploading a bundle. Adding a display name alone does not repair a download fa
 
 Updating a patch source downloads the newer patches. Apply them to an original
 APK and install the newly patched app to receive the changes in that app.
-LinkedIn's declared compatibility remains **4.1.1255.1** and **4.1.1258**, with the
-original experimental target retained. A new Gunshootr bundle version does not
-change those app version declarations.
+The Michii 1.1.0 port preserves its upstream LinkedIn targets **4.1.1255.1** and
+**4.1.1259**, with the experimental target retained. Upstream replaced the old
+**4.1.1258** target; Gunshootr follows that change without adding other app versions.
 
 ## Publish future updates
 
@@ -47,7 +47,7 @@ Pushing source code alone does not publish an updated patch bundle.
 
 1. Commit and push the source changes to `main`.
 2. Open GitHub **Actions → Release → Run workflow** on `main`.
-3. Enter a new stable tag greater than the current bundle version, such as `v1.0.7`.
+3. Enter a new stable tag greater than the current bundle version, such as `v1.1.1`.
 4. Wait for the build and tests to pass and the release to be published.
 
 The workflow builds the Android patch bundle and LinkedIn extension, runs tests,
