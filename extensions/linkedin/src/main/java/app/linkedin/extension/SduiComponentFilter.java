@@ -20,7 +20,6 @@ public final class SduiComponentFilter {
             Object viewTracking = Proto.is(component, "hasViewTracking")
                     ? Proto.call(component, "getViewTracking") : null;
             String viewName = Proto.string(viewTracking, "getViewName");
-            String screenName = Proto.string(component, "getObservabilityViewName");
 
             switch (viewName) {
                 case "feed-full-update":
@@ -52,6 +51,7 @@ public final class SduiComponentFilter {
                 return hide(true, "premium upsell: " + viewName);
             }
 
+            String screenName = Proto.string(component, "getObservabilityViewName");
             if (screenName.startsWith(MEDIA_SCREEN_PREFIX) || screenName.startsWith(PROFILE_MEDIA_PREFIX)) {
                 collectMedia(component, screenName);
             }

@@ -21,18 +21,33 @@ public final class NavPanelPatch {
     private static final String PACKAGE = "com.linkedin.android.home.navpanel.";
     static final String TITLE = "Gunshootr Patches";
 
+    private static volatile Class<?> cachedViewData;
+    private static volatile Object cachedSavedPosts;
+    private static volatile Object cachedChevronRight;
+    private static volatile Constructor<?> cachedConstructor;
+    private static volatile int cachedKind; // 1 = widget, 2 = bitmask, 3 = dynamic
+
     /** Injected before every return of HomeNavPanelTransformer.transform(HomeNavPanelAggregateResponse). */
     public static AbstractList<Object> addSettingsItem(Object panel) {
         @SuppressWarnings("unchecked")
         AbstractList<Object> list = (AbstractList<Object>) panel;
         if (list == null) return null;
         try {
-            Class<?> viewData = Class.forName(PACKAGE + "HomeNavPanelSectionV2ViewData");
-            Class<?> sectionType = Class.forName(PACKAGE + "SectionType");
-            Class<?> chevronType = Class.forName(PACKAGE + "HomeNavPanelSectionChevronType");
-            Class<?> widget = Class.forName(PACKAGE + "HomeNavPanelAnalyticsWidgetViewData");
-            Object savedPosts = sectionType.getField("SAVED_POSTS").get(null);
-            Object chevronRight = chevronType.getField("RIGHT").get(null);
+            Class<?> viewData = cachedViewData;
+            Object savedPosts = cachedSavedPosts;
+            Object chevronRight = cachedChevronRight;
+
+            if (viewData == null || savedPosts == null || chevronRight == null) {
+                viewData = Class.forName(PACKAGE + "HomeNavPanelSectionV2ViewData");
+                Class<?> sectionType = Class.forName(PACKAGE + "SectionType");
+                Class<?> chevronType = Class.forName(PACKAGE + "HomeNavPanelSectionChevronType");
+                savedPosts = sectionType.getField("SAVED_POSTS").get(null);
+                chevronRight = chevronType.getField("RIGHT").get(null);
+
+                cachedViewData = viewData;
+                cachedSavedPosts = savedPosts;
+                cachedChevronRight = chevronRight;
+            }
 
             for (Object item : list) {
                 if (viewData.isInstance(item) && TITLE.equals(String.valueOf(Reflect.get(item, "title")))) {
@@ -40,7 +55,7 @@ public final class NavPanelPatch {
                 }
             }
 
-            Object entry = createSectionEntry(viewData, savedPosts, chevronRight, sectionType, chevronType, widget);
+            Object entry = createSectionEntry(viewData, savedPosts, chevronRight);
 
             ArrayList<Object> result = new ArrayList<>(list);
             int index = result.size();
@@ -60,17 +75,31 @@ public final class NavPanelPatch {
     }
 
     private static Object createSectionEntry(
-            Class<?> viewData, Object savedPosts, Object chevronRight,
-            Class<?> sectionType, Class<?> chevronType, Class<?> widget) throws ReflectiveOperationException {
+            Class<?> viewData, Object savedPosts, Object chevronRight) throws ReflectiveOperationException {
+        Constructor<?> cached = cachedConstructor;
+        int kind = cachedKind;
+        if (cached != null) {
+            if (kind == 1) return cached.newInstance(TITLE, savedPosts, chevronRight, Collections.emptyList(), null);
+            if (kind == 2) return cached.newInstance(TITLE, savedPosts, chevronRight, Collections.emptyList(), 24);
+        }
+
+        Class<?> sectionType = savedPosts.getClass();
+        Class<?> chevronType = chevronRight.getClass();
+        Class<?> widget = Class.forName(PACKAGE + "HomeNavPanelAnalyticsWidgetViewData");
+
         // Try direct constructors with String or CharSequence first
         for (Class<?> titleType : new Class<?>[] { String.class, CharSequence.class }) {
             try {
                 Constructor<?> c = viewData.getConstructor(titleType, sectionType, chevronType, List.class, widget);
+                cachedConstructor = c;
+                cachedKind = 1;
                 return c.newInstance(TITLE, savedPosts, chevronRight, Collections.emptyList(), null);
             } catch (NoSuchMethodException ignored) {
             }
             try {
                 Constructor<?> c = viewData.getConstructor(titleType, sectionType, chevronType, List.class, int.class);
+                cachedConstructor = c;
+                cachedKind = 2;
                 return c.newInstance(TITLE, savedPosts, chevronRight, Collections.emptyList(), 24);
             } catch (NoSuchMethodException ignored) {
             }

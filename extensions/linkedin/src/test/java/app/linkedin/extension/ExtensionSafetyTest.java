@@ -137,4 +137,17 @@ public class ExtensionSafetyTest {
         assertFalse(UpdateChecker.isNewer("1.0.4", "1.0.5"));
         assertFalse(UpdateChecker.isNewer("invalid", "1.0.5"));
     }
+
+    @Test
+    public void containsAsciiMatchesCorrectlyWithoutAllocations() {
+        byte[] data = "urn:li:sponsoredContentV2:12345".getBytes(StandardCharsets.US_ASCII);
+        assertTrue(ProtoScanner.containsAscii(data, "urn:li:sponsoredContentV2:"));
+        assertTrue(ProtoScanner.containsAscii(data, "12345"));
+        assertTrue(ProtoScanner.containsAscii(data, "sponsored"));
+        assertTrue(ProtoScanner.containsAscii(data, ""));
+        assertFalse(ProtoScanner.containsAscii(data, "notfound"));
+        assertFalse(ProtoScanner.containsAscii(data, "urn:li:sponsoredContentV2:12345_extra_too_long"));
+        assertFalse(ProtoScanner.containsAscii(null, "needle"));
+        assertFalse(ProtoScanner.containsAscii(data, null));
+    }
 }

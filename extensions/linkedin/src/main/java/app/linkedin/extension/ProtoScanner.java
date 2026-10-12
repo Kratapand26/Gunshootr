@@ -58,14 +58,19 @@ final class ProtoScanner {
         return false;
     }
 
-    /** Fast raw byte search, for markers that are unambiguous substrings (such as URNs). */
+    /** Fast raw byte search, for markers that are unambiguous substrings (such as URNs). Zero allocations. */
     static boolean containsAscii(byte[] data, String needle) {
-        if (data == null) return false;
-        byte[] n = needle.getBytes(StandardCharsets.US_ASCII);
+        if (data == null || needle == null) return false;
+        int nLen = needle.length();
+        if (nLen == 0) return true;
+        int max = data.length - nLen;
+        if (max < 0) return false;
+        byte first = (byte) needle.charAt(0);
         outer:
-        for (int i = 0; i <= data.length - n.length; i++) {
-            for (int j = 0; j < n.length; j++) {
-                if (data[i + j] != n[j]) continue outer;
+        for (int i = 0; i <= max; i++) {
+            if (data[i] != first) continue;
+            for (int j = 1; j < nLen; j++) {
+                if (data[i + j] != (byte) needle.charAt(j)) continue outer;
             }
             return true;
         }

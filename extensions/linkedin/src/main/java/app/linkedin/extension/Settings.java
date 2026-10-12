@@ -49,7 +49,7 @@ public final class Settings {
     static final String LANGUAGE = "language";
     static final String DEFAULT_LANGUAGE = "en";
 
-    private static SharedPreferences prefs;
+    private static volatile SharedPreferences prefs;
 
     private Settings() {
     }
